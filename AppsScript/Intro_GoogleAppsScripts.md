@@ -23,3 +23,8 @@ Tại đây, tìm và bật tùy chọn "Google Apps Script API".
 - Phải lưu dự án trên google apps script thì mới pull, push từ local VSCode/Cursor lên được. 
 - Khi pull xuống thì các file cùng tên dưới local sẽ đcợc update, các file ko có tên trên cloud thì sẽ giữ nguyên, các file bị xoá trên cloud thì local không ảnh hưởng.  
 - Còn khi push lên thì data trên Google Apps Script bị mất.
+
+4. KHI PUSH LÊN GITHUB: 
+- API KEY KO ĐƯỢC PUSH 
+- File .clasp.json cũng KO THỂ PUSH LÊN GITHUB (((chứa ID của repo trên Google Apps Script, nó được tạo khi bạn đăng nhập vào Google Apps Script và chọn "Publish > Deploy as API executable"))).
+=> Need enter scriptID in file `.clasp.json` để đồng bộ: VSCode với Google Apps Script. 
