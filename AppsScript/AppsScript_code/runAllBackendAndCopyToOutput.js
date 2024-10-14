@@ -3,11 +3,19 @@ function runAllBackendAndCopyToOutput() {
   copyBackendToOutput();
 }
 
-function runAllBackend(){
-  runDetectAll();
-  runExtendAll();
-  runSugScoringAll();
 
+function runAllBackend(){
+  console.log("Starting runDetectAll()");
+  runDetectAll();
+  console.log("Finished runDetectAll()");
+  
+  console.log("Starting runExtendAll()");
+  runExtendAll();
+  console.log("Finished runExtendAll()");
+  
+  console.log("Starting runSugScoringAll()");
+  runSugScoringAll();
+  console.log("Finished runSugScoringAll()");
 }
 
 // Copy kết quả từ Backend sang Output

@@ -47,6 +47,13 @@ This project processes transcription data using Google Sheets and OpenAI API to 
 3. **Scoring**: Generate suggested scoring for each section (`runSugScoringAll.js`).
 4. **Final Output**: Copy all results from backend to the output sheet (`runAllBackendAndCopyToOutput.js`).
 
+## HOW TO RUN THE CODE: 
+1. API KEY KO ĐƯỢC PUSH GITHUB: 
+=> Need enter API KEY in Google Apps Script: 
+2. File .clasp.json cũng KO THỂ PUSH LÊN GITHUB (((chứa ID của repo trên Google Apps Script, nó được tạo khi bạn đăng nhập vào Google Apps Script và chọn "Publish > Deploy as API executable"))).
+=> Need enter scriptID in file `.clasp.json` để đồng bộ: VSCode với Google Apps Script. 
+// Enter scriptID   
+
 --- 
 
 This project integrates transcription processing with OpenAI, providing flexible functionality for detecting, extending, and scoring sections in transcriptions.
