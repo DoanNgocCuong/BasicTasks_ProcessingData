@@ -14,8 +14,8 @@ class LarkBaseOperations:
         load_dotenv()
         self.app_base_token = config.APP_BASE_TOKEN
         self.base_table_id = config.BASE_TABLE_ID
-        self.app_id = os.getenv("APP_DOANNGOCCUONG_ID")
-        self.app_secret = os.getenv("APP_DOANNGOCCUONG_SECRET")
+        self.app_id = config.APP_DOANNGOCCUONG_ID
+        self.app_secret = config.APP_DOANNGOCCUONG_SECRET
         self.tenant_access_token = None
 
     def get_tenant_access_token(self):
