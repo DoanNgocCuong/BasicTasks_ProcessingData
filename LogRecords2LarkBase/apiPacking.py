@@ -1,10 +1,10 @@
 from flask import Flask, jsonify, request
 from config import APP_DOANNGOCCUONG_ID, APP_DOANNGOCCUONG_SECRET, APP_BASE_TOKEN, BASE_TABLE_ID
-from larkbaseOperations_ClassNoASYNC import LarkBaseOperations
+from larkbaseOperationsClassNoASYNC import LarkBaseOperations
 
 app = Flask(__name__)
 
-@app.route('/api/create-many-records', methods=['POST'])
+@app.route('/api/larkbase/create-many-records', methods=['POST'])
 def process_data():
     try:
         data = request.get_json()
@@ -40,7 +40,16 @@ def process_data():
         lark_ops.app_base_token = standardized_config['APP_BASE_TOKEN']
         lark_ops.base_table_id = standardized_config['BASE_TABLE_ID']
         
-        response = lark_ops.create_many_records_with_checkTenantAccessToken(data)
+        # Extract records data from the request
+        records_data = data.get('records')
+        if not records_data:
+            return jsonify({
+                "status": "error",
+                "message": "Missing 'records' field in request data"
+            }), 400
+            
+        records_payload = {"records": records_data}
+        response = lark_ops.create_many_records_with_checkTenantAccessToken(records_payload)
         
         if response:
             return jsonify({

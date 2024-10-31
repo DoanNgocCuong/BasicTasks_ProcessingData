@@ -7,3 +7,4 @@ pytest-asyncio>=0.18.0
 black>=22.0.0
 flake8>=4.0.0
 Flask
+urllib3

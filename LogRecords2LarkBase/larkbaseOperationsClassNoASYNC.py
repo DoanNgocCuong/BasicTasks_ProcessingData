@@ -3,6 +3,8 @@ import json
 import os
 import sys
 from dotenv import load_dotenv
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Add the parent directory to sys.path to import config.py
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -56,6 +58,11 @@ class LarkBaseOperations:
         return response
 
     def create_many_records_with_checkTenantAccessToken(self, records_fields_json):
+        # Validate input format
+        if not isinstance(records_fields_json, dict) or 'records' not in records_fields_json:
+            print("Invalid input format: Expected {'records': [...]} structure")
+            return None
+            
         try:
             with open('tenantAccessToken_storage.txt', 'r') as file:
                 self.tenant_access_token = file.read().strip()
