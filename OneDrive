@@ -1,0 +1,8 @@
+.env
+.venv
+
+# Ignore all .mp3 and .wav files except those in the Giong directory
+*.mp3
+*.wav
+!Giong/**/*.mp3
+!Giong/**/*.wav
