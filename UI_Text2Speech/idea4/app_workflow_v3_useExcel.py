@@ -76,7 +76,8 @@ def clean_text(text):
 def merge_audio_files(input_files, output_file="final_output.mp3"):
     """Merge all audio files into one"""
     audio_clips = []
-    missing_files = []  # Track missing files
+    # Use output_file directly as it now contains full path
+    output_path = output_file
     
     try:
         # Read each audio file
@@ -85,44 +86,28 @@ def merge_audio_files(input_files, output_file="final_output.mp3"):
             temp_path = os.path.join(TEMP_DIR, file)
             script_path = os.path.join(SCRIPT_DIR, file)
             
-            file_found = False
-            # Try all possible file locations and extensions
-            possible_paths = [
-                temp_path,
-                script_path,
-                os.path.join(TEMP_DIR, file[:-4] + '.wav') if file.lower().endswith('.mp3') else os.path.join(TEMP_DIR, file[:-4] + '.mp3'),
-                os.path.join(SCRIPT_DIR, file[:-4] + '.wav') if file.lower().endswith('.mp3') else os.path.join(SCRIPT_DIR, file[:-4] + '.mp3')
-            ]
-            
-            for path in possible_paths:
-                if os.path.exists(path):
-                    clip = AudioFileClip(path)
-                    audio_clips.append(clip)
-                    file_found = True
-                    break
-            
-            if not file_found:
-                missing_files.append(file)
+            if os.path.exists(temp_path):
+                file_path = temp_path
+            elif os.path.exists(script_path):
+                file_path = script_path
+            else:
                 print(f"Warning: File {file} not found")
-
-        if missing_files:
-            print(f"\nError: Cannot proceed with merge. Missing files: {', '.join(missing_files)}")
-            # Clean up loaded clips
-            for clip in audio_clips:
-                clip.close()
-            return False
-
+                continue
+                
+            clip = AudioFileClip(file_path)
+            audio_clips.append(clip)
+        
         if audio_clips:
             # Merge clips
             final_clip = concatenate_audioclips(audio_clips)
             
             # Create output directory if it doesn't exist
-            output_dir = os.path.dirname(output_file)
+            output_dir = os.path.dirname(output_path)
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
             
             # Save file
-            final_clip.write_audiofile(output_file)
+            final_clip.write_audiofile(output_path)
             
             # Close clips
             for clip in audio_clips:
@@ -165,7 +150,7 @@ def merge_audio_files(input_files, output_file="final_output.mp3"):
  
  
  
-def process_excel_to_audio(excel_file, sheet_name="idea3", default_voice="en-AU-NatashaNeural", limit_rows=None):
+def process_excel_to_audio(excel_file, sheet_name="Sheet1", default_voice="en-AU-NatashaNeural", limit_rows=None):
     """
     Process each row in Excel file to create audio files
     limit_rows: Number of rows to process (None for all rows)
@@ -203,10 +188,10 @@ def process_excel_to_audio(excel_file, sheet_name="idea3", default_voice="en-AU-
                 # Reset empty row count if we have text
                 empty_row_count = 0
 
-                # Check if text is a direct audio file reference (MP3 or WAV)
-                if any(ext in text.lower() for ext in ['.mp3', '.wav']):
+                # Check if text is a direct MP3 reference
+                if ".mp3" in text.lower():
                     output_file = text.strip()
-                    print(f"Using direct audio reference: {output_file}")
+                    print(f"Using direct MP3 reference: {output_file}")
                     created_files.append(output_file)
                     continue
                 
