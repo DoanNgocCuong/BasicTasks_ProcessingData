@@ -76,37 +76,3 @@ def run_script(script_name):
             'success': False,
             'error': str(e)
         }), 500 
-
-    """Test PostgreSQL connection via SSH tunnel"""
-    try:
-        # Thử kết nối
-        tunnel, connection = connect_to_database()
-        
-        # Test query đơn giản
-        cursor = connection.cursor()
-        cursor.execute("SELECT 1")
-        result = cursor.fetchone()
-        
-        # Đóng kết nối
-        cursor.close()
-        connection.close()
-        tunnel.stop()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Database connection successful',
-            'details': {
-                'ssh_host': tunnel.ssh_host,
-                'ssh_port': tunnel.ssh_port,
-                'local_bind_port': tunnel.local_bind_port,
-                'is_active': tunnel.is_active
-            }
-        })
-        
-    except Exception as e:
-        logger.error(f'Database connection failed: {str(e)}', exc_info=True)
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'type': 'database_connection_error'
-        }), 500 

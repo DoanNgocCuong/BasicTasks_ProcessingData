@@ -3,9 +3,9 @@ services:
   query-api:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.requirements.dev
     ports:
-      - "5000:5000"
+      - "25041:5000"
     volumes:
       - ./backend:/app  # Hot reload - mount toàn bộ code
       - C:/Users/User/.ssh/id_rsa:/root/.ssh/id_rsa:ro  # SSH key cho dev

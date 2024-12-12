@@ -38,3 +38,5 @@ Lý do:
 ### Với Dockfile còn chưa có điều chỉnh để đẩy lên server
 
 trên server không cần key thì sao ??? @docker-compose..yml @queryRating_logLarkbase.py @queryRatingToolsWorkflowMindpal_logLarkbase.py 
+
+[docker compose dev] - sucessful for Dockerfile.requirements.dev vs docker-compose.dev (call tới Dockerfile.requirements.dev)    ---- RUN pip install -r requirements.txt -i https://pypi.org/simple  (BỎ NO --CACHE DIR NHANH HẲN, CÒN KHÔNG THÌ 10 MIN)
