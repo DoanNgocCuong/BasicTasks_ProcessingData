@@ -1,8 +1,9 @@
 from connect_PostgresSQLDBeaver import connect_to_database
+from utils_saveQueryExcel import save_query_to_excel
 
-def query_ratings():
+def query_tools_in_workflow():
     """
-    Query rating data from workflow_node_execution_mindpal table.
+    Query tool nodes data from workflow_node_execution_mindpal table.
     """
     try:
         # Connect to database
@@ -38,10 +39,12 @@ def query_ratings():
         cursor.execute(query)
         results = cursor.fetchall()
 
-        # Display results
-        print("Query results:")
-        for row in results:
-            print(row)
+        # Save results to Excel with query type
+        excel_path = save_query_to_excel(
+            results, 
+            cursor,
+            query_type='workflow_tools'  # This will create files like: workflow_tools_20240311_143022.xlsx
+        )
 
         # Close connection
         cursor.close()
@@ -53,4 +56,4 @@ def query_ratings():
         print("An error occurred:", e)
 
 if __name__ == "__main__":
-    query_ratings()
+    query_tools_in_workflow() 
