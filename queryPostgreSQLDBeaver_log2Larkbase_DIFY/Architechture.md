@@ -4,6 +4,8 @@ https://github.com/DoanNgocCuong/MiniProd_ContentEngFlow_IELTSStepUpE_T102024/bl
 Cấu trúc thư mục: 
 ```
 src/
+|
+├── .ssh/                # Thư mục chứa tệp SSH key
 ├── backend/
 │   ├── api/
 │   │   ├── __init__.py
@@ -16,5 +18,6 @@ src/
 │   │   └── scripts.py
 │   ├── app.py
 │   ├── requirements.txt
+|   ├── id_rsa  # Di chuyển tệp vào đây
 │   └── Dockerfile
 ```

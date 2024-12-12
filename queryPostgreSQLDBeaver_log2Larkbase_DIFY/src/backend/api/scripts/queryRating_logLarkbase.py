@@ -1,17 +1,22 @@
+from pathlib import Path
 import pandas as pd
 import os
 from utils_saveToLarkbase import save_ratings_to_larkbase
 from utils_query import execute_query_with_connection, query_ratings_data
 
+# Define the base paths
+SCRIPTS_FOLDER = Path(__file__).parent
+QUERY_RESULTS_FOLDER = SCRIPTS_FOLDER / 'query_results'
+RATINGS_FILE = QUERY_RESULTS_FOLDER / 'ratings_only.xlsx'
+
 def get_existing_records():
     """Get records from ratings_only.xlsx file"""
     try:
-        excel_path = './query_results/ratings_only.xlsx'
-        if not os.path.exists(excel_path):
-            print(f"File not found: {excel_path}")
+        if not RATINGS_FILE.exists():
+            print(f"File not found: {RATINGS_FILE}")
             return pd.DataFrame()
             
-        existing_df = pd.read_excel(excel_path)
+        existing_df = pd.read_excel(RATINGS_FILE)
         print(f"Found {len(existing_df)} existing records in ratings_only.xlsx")
         return existing_df
     except Exception as e:
@@ -69,10 +74,12 @@ def query_ratings():
             # Save changes to Larkbase
             save_ratings_to_larkbase(changed_records_df.values.tolist())
             
+            # Create query_results directory if it doesn't exist
+            QUERY_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
+            
             # Update Excel file
-            excel_path = './query_results/ratings_only.xlsx'
             all_records = pd.concat([existing_df, changed_records_df], ignore_index=True)
-            all_records.to_excel(excel_path, index=False)
+            all_records.to_excel(RATINGS_FILE, index=False)
             print(f"Updated Excel file with {len(changed_records_df)} new/modified records")
         else:
             print("No changes to save")

@@ -1,17 +1,22 @@
+from pathlib import Path
 import pandas as pd
 import os
 from utils_saveToLarkbase import save_workflow_tools_to_larkbase
 from utils_query import execute_query_with_connection, query_workflow_tools_data
 
+# Define the base paths
+SCRIPTS_FOLDER = Path(__file__).parent
+QUERY_RESULTS_FOLDER = SCRIPTS_FOLDER / 'query_results'
+WORKFLOW_TOOLS_FILE = QUERY_RESULTS_FOLDER / 'workflow_tools.xlsx'
+
 def get_existing_records():
     """Get records from workflow_tools.xlsx file"""
     try:
-        excel_path = './query_results/workflow_tools.xlsx'
-        if not os.path.exists(excel_path):
-            print(f"File not found: {excel_path}")
+        if not WORKFLOW_TOOLS_FILE.exists():
+            print(f"File not found: {WORKFLOW_TOOLS_FILE}")
             return pd.DataFrame()
             
-        existing_df = pd.read_excel(excel_path)
+        existing_df = pd.read_excel(WORKFLOW_TOOLS_FILE)
         print(f"Found {len(existing_df)} existing records in workflow_tools.xlsx")
         return existing_df
     except Exception as e:
@@ -90,10 +95,12 @@ def query_tools_in_workflow():
             # Save changes to Larkbase
             save_workflow_tools_to_larkbase(changed_records_df.values.tolist())
             
+            # Create query_results directory if it doesn't exist
+            QUERY_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
+            
             # Update Excel file
-            excel_path = './query_results/workflow_tools.xlsx'
             all_records = pd.concat([existing_df, changed_records_df], ignore_index=True)
-            all_records.to_excel(excel_path, index=False)
+            all_records.to_excel(WORKFLOW_TOOLS_FILE, index=False)
             print(f"Updated Excel file with {len(changed_records_df)} new/modified records")
         else:
             print("No changes to save")

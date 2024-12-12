@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 import logging
 import sys
-from api.scripts.connect_PostgresSQLDBeaver import connect_to_database
 
 # Set up detailed logging
 logging.basicConfig(
@@ -78,8 +77,6 @@ def run_script(script_name):
             'error': str(e)
         }), 500 
 
-@bp.route('/test-db-connection', methods=['GET'])
-def test_db_connection():
     """Test PostgreSQL connection via SSH tunnel"""
     try:
         # Thử kết nối
