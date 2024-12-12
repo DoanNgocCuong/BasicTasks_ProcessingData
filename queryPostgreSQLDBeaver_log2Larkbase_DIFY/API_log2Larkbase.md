@@ -30,6 +30,7 @@ curl --location 'http://103.253.20.13:25033/api/larkbase/create-many-records' \
 - Sau khi return ra results. 
 - So sánh results này so với file query_results/ratings_only
 - Nếu nó có thêm dòng nào, thì lưu dòng đó vào Larkbase bằng API 
+Dựa vào Query DBeaver -> python lưu data vào CSV không ổn - Excel oke (results thu được check với file Excel cũ, nếu có dòng mới sẽ lưu dòng mới đó vào Excel và Larkbase thông qua API). 
 
 ```
 curl --location 'http://103.253.20.13:25033/api/larkbase/create-many-records' \

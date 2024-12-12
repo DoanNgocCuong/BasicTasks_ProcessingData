@@ -1,18 +1,23 @@
-import json
-import requests
 import pandas as pd
+import requests
 from connect_PostgresSQLDBeaver import connect_to_database
 from utils_saveQueryExcel import save_query_to_excel
 
 def get_existing_records():
-    # Read the latest ratings_only Excel file from query_results folder
+    """
+    Get records from the fixed ratings_only.xlsx file
+    """
     try:
-        existing_df = pd.read_excel('query_results/ratings_only_latest.xlsx')
-        return existing_df['id'].tolist()  # Return list of existing IDs
-    except:
-        return []  # Return empty list if file doesn't exist
+        existing_df = pd.read_excel('./query_results/ratings_only.xlsx')
+        existing_ids = existing_df['id'].astype(str).tolist()
+        print(f"Found {len(existing_ids)} existing records in ratings_only.xlsx")
+        return existing_ids
+    except Exception as e:
+        print(f"Error reading ratings_only.xlsx: {e}")
+        return []
 
 def save_to_larkbase(new_records):
+    """Save new records to Larkbase via API"""
     url = 'http://103.253.20.13:25033/api/larkbase/create-many-records'
     headers = {
         'Content-Type': 'application/json',
@@ -29,7 +34,7 @@ def save_to_larkbase(new_records):
         "records": []
     }
 
-    # Convert records to Larkbase format
+    # Format records for Larkbase
     for record in new_records:
         formatted_record = {
             "fields": {
@@ -59,11 +64,14 @@ def save_to_larkbase(new_records):
         print(f"Error making API request: {e}")
 
 def query_ratings():
+    """
+    Query ratings and compare with existing data
+    """
     try:
-        # Get existing records
+        # Get existing records from fixed Excel file
         existing_ids = get_existing_records()
 
-        # Connect to database and get new results
+        # Get new results from database
         tunnel, connection = connect_to_database()
         cursor = connection.cursor()
         query = """
@@ -88,21 +96,23 @@ def query_ratings():
         """
         cursor.execute(query)
         results = cursor.fetchall()
+        print(f"Found {len(results)} total records in database")
 
-        # Find new records
+        # Find new records by comparing IDs
         new_records = [record for record in results if str(record[0]) not in existing_ids]
 
         if new_records:
             print(f"Found {len(new_records)} new records")
-            # Save new records to Larkbase
+            # Save to Larkbase
             save_to_larkbase(new_records)
             
-            # Save all results to Excel
+            # Update Excel file with all records
             excel_path = save_query_to_excel(
                 results, 
                 cursor,
                 query_type='ratings_only'
             )
+            print(f"Updated Excel file saved: {excel_path}")
         else:
             print("No new records found")
 
