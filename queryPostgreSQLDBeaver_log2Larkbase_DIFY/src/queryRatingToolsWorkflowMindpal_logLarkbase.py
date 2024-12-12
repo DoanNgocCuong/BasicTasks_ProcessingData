@@ -1,22 +1,23 @@
-import pandas as pd
+import json
 import requests
+import pandas as pd
 import os
 from connect_PostgresSQLDBeaver import connect_to_database
 from utils_saveQueryExcel import save_query_to_excel
 
 def get_existing_records():
-    """Get records from ratings_only.xlsx file"""
+    """Get records from workflow_tools.xlsx file"""
     try:
-        excel_path = './query_results/ratings_only.xlsx'
+        excel_path = './query_results/workflow_tools.xlsx'
         if not os.path.exists(excel_path):
             print(f"File not found: {excel_path}")
             return pd.DataFrame()
             
         existing_df = pd.read_excel(excel_path)
-        print(f"Found {len(existing_df)} existing records in ratings_only.xlsx")
+        print(f"Found {len(existing_df)} existing records in workflow_tools.xlsx")
         return existing_df
     except Exception as e:
-        print(f"Error reading ratings_only.xlsx: {e}")
+        print(f"Error reading workflow_tools.xlsx: {e}")
         return pd.DataFrame()
 
 def save_to_larkbase(new_records):
@@ -32,23 +33,35 @@ def save_to_larkbase(new_records):
             "app_id": "cli_a7852e8dc6fc5010",
             "app_secret": "6SIj0RfQ0ZwROvUhkjAwLebhLfJkIwnT", 
             "app_base_token": "BtGmbls2CaqfHnsuwxelJNlpgvb",
-            "base_table_id": "tblvifRIX8c9xGpp"
+            "base_table_id": "tblcmmgOlAYW4dXS"
         },
         "records": [
             {
                 "fields": {
                     "id": str(record[0]),
-                    "workflow_run_id": str(record[1]),
-                    "app_id": str(record[2]), 
-                    "title": str(record[3]),
-                    "node_type": str(record[4]),
-                    "inputs": str(record[5]),
-                    "outputs": str(record[6]),
-                    "provider_id": str(record[7]),
-                    "user_inputs_text": str(record[8]),
-                    "rating": str(record[9]),
-                    "rate_updated_at": str(record[10]),
-                    "rate_account_id": str(record[11])
+                    "tenant_id": str(record[1]),
+                    "app_id": str(record[2]),
+                    "workflow_id": str(record[3]),
+                    "triggered_from": str(record[4]),
+                    "workflow_run_id": str(record[5]),
+                    "workflow_node_execution_id": str(record[6]),
+                    "index": str(record[7]),
+                    "predecessor_node_id": str(record[8]),
+                    "node_id": str(record[9]),
+                    "node_type": str(record[10]),
+                    "title": str(record[11]),
+                    "inputs": str(record[12]),
+                    "process_data": str(record[13]),
+                    "outputs": str(record[14]),
+                    "status": str(record[15]),
+                    "error": str(record[16]),
+                    "elapsed_time": str(record[17]),
+                    "execution_metadata": str(record[18]),
+                    "created_at": str(record[19]),
+                    "created_by_role": str(record[20]),
+                    "created_by": str(record[21]),
+                    "finished_at": str(record[22]),
+                    "node_execution_id": str(record[23])
                 }
             } for record in new_records
         ]
@@ -64,14 +77,7 @@ def save_to_larkbase(new_records):
         print(f"Error making API request: {e}")
 
 def compare_and_find_changes(existing_df, new_df):
-    """
-    Compare existing and new data to find rating changes
-    - Sau khi return ra results. 
-    - So sánh results này so với file query_results/ratings_only
-    - Nếu nó có thêm dòng nào, thì lưu dòng đó vào Larkbase bằng API 
-    Dựa vào Query DBeaver -> python lưu data vào CSV không ổn - Excel oke (results thu được check với file Excel cũ, nếu có dòng mới sẽ lưu dòng mới đó vào Excel và Larkbase thông qua API). 
-    - Đơn giản hóa code để chỉ kiểm tra thay đổi trong cột rating
-    """
+    """Compare existing and new data to find execution_metadata changes"""
     if existing_df.empty:
         print("No existing data - all records are new")
         return new_df
@@ -85,16 +91,14 @@ def compare_and_find_changes(existing_df, new_df):
     if not new_records.empty:
         print(f"\nFound {len(new_records)} new records")
     
-    # Find updated ratings
+    # Find updated execution_metadata
     changed_records = []
     for _, new_record in new_df[new_df['id'].isin(existing_df['id'])].iterrows():
         old_record = existing_df[existing_df['id'] == new_record['id']].iloc[0]
         
-        # Only compare rating field
-        if str(old_record['rating']) != str(new_record['rating']):
-            print(f"\nRating changed for record ID {new_record['id']}:")
-            print(f"  Old rating: {old_record['rating']}")
-            print(f"  New rating: {new_record['rating']}")
+        # Only compare execution_metadata field
+        if str(old_record['execution_metadata']) != str(new_record['execution_metadata']):
+            print(f"\nExecution metadata changed for record ID {new_record['id']}")
             changed_records.append(new_record)
     
     if changed_records:
@@ -103,8 +107,8 @@ def compare_and_find_changes(existing_df, new_df):
     
     return new_records if not new_records.empty else pd.DataFrame(columns=new_df.columns)
 
-def query_ratings():
-    """Main function to query and update ratings"""
+def query_tools_in_workflow():
+    """Query and update workflow tools data"""
     tunnel = connection = cursor = None
     try:
         # Get existing records
@@ -116,22 +120,20 @@ def query_ratings():
         
         # Query database
         query = """
-        SELECT 
-            id, workflow_run_id, app_id, title, node_type, inputs, outputs,
-            execution_metadata::json -> 'tool_info' ->> 'provider_id' AS provider_id,
-            execution_metadata::json -> 'user_inputs' ->> '#1733764453822.text#' AS user_inputs_text,
-            execution_metadata::json -> 'rate' ->> 'rating' AS rating,
-            execution_metadata::json -> 'rate' ->> 'updated_at' AS rate_updated_at,
-            execution_metadata::json -> 'rate' ->> 'account_id' AS rate_account_id
+        WITH tool_nodes AS (
+            SELECT *
+            FROM public.workflow_node_execution_mindpal
+            WHERE node_type = 'tool' 
+            AND execution_metadata::jsonb ? 'rate'
+        )
+        SELECT *
         FROM public.workflow_node_execution_mindpal
-        WHERE node_type = 'tool' AND execution_metadata::jsonb ? 'rate';
+        WHERE workflow_run_id IN (SELECT workflow_run_id FROM tool_nodes);
         """
         cursor.execute(query)
         
-        # Convert results to DataFrame
-        columns = ['id', 'workflow_run_id', 'app_id', 'title', 'node_type', 'inputs', 
-                  'outputs', 'provider_id', 'user_inputs_text', 'rating', 
-                  'rate_updated_at', 'rate_account_id']
+        # Convert results to DataFrame with all columns
+        columns = [desc[0] for desc in cursor.description]
         new_df = pd.DataFrame(cursor.fetchall(), columns=columns)
         print(f"\nFound {len(new_df)} total records in database")
 
@@ -143,7 +145,7 @@ def query_ratings():
             save_to_larkbase(changed_records_df.values.tolist())
             
             # Update Excel file
-            excel_path = './query_results/ratings_only.xlsx'
+            excel_path = './query_results/workflow_tools.xlsx'
             all_records = pd.concat([existing_df, changed_records_df], ignore_index=True)
             all_records.to_excel(excel_path, index=False)
             print(f"Updated Excel file with {len(changed_records_df)} new/modified records")
@@ -160,4 +162,4 @@ def query_ratings():
         print("Connections closed.")
 
 if __name__ == "__main__":
-    query_ratings()
+    query_tools_in_workflow() 
