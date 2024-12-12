@@ -19,7 +19,11 @@ def get_existing_records():
         return pd.DataFrame()
 
 def compare_and_find_changes(existing_df, new_df):
-    """Compare existing and new data to find execution_metadata changes"""
+    """
+    Compare existing and new data to find rating changes in execution_metadata. 
+    Nếu có sự thay đổi về rating trong execution_metadata
+    (thay vì compare toàn bộ data trong cột excution_metadata)
+    """
     if existing_df.empty:
         print("No existing data - all records are new")
         return new_df
@@ -33,15 +37,34 @@ def compare_and_find_changes(existing_df, new_df):
     if not new_records.empty:
         print(f"\nFound {len(new_records)} new records")
     
-    # Find updated execution_metadata
+    # Find updated ratings in execution_metadata
     changed_records = []
     for _, new_record in new_df[new_df['id'].isin(existing_df['id'])].iterrows():
         old_record = existing_df[existing_df['id'] == new_record['id']].iloc[0]
         
-        # Only compare execution_metadata field
-        if str(old_record['execution_metadata']) != str(new_record['execution_metadata']):
-            print(f"\nExecution metadata changed for record ID {new_record['id']}")
-            changed_records.append(new_record)
+        try:
+            # Parse execution_metadata JSON
+            import json
+            old_metadata = json.loads(str(old_record['execution_metadata']))
+            new_metadata = json.loads(str(new_record['execution_metadata']))
+            
+            # Extract ratings
+            old_rating = old_metadata.get('rate', {}).get('rating')
+            new_rating = new_metadata.get('rate', {}).get('rating')
+            
+            # Compare ratings
+            if str(old_rating) != str(new_rating):
+                print(f"\nRating changed in execution_metadata for record ID {new_record['id']}:")
+                print(f"  Old rating: {old_rating}")
+                print(f"  New rating: {new_rating}")
+                changed_records.append(new_record)
+                
+        except json.JSONDecodeError as e:
+            print(f"Error parsing execution_metadata for record {new_record['id']}: {e}")
+            continue
+        except Exception as e:
+            print(f"Error processing record {new_record['id']}: {e}")
+            continue
     
     if changed_records:
         changed_df = pd.DataFrame(changed_records)
