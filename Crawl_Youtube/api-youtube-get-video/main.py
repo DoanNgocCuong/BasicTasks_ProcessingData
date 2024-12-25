@@ -145,7 +145,7 @@ def get_playlist_videos(playlist_id):
     """Fetch playlist videos from YouTube API."""
     url = "https://youtube-media-downloader.p.rapidapi.com/v2/playlist/details"
     
-    api_key = os.getenv(RAPIDAPI_KEY)
+    api_key = os.getenv(RAPID_API_KEY)
     
     headers = {
         "X-RapidAPI-Key": api_key,
