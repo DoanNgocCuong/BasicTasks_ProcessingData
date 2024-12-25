@@ -26,8 +26,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Rapid API key từ environment variable 
+load_dotenv()
 RAPID_API_KEY = os.environ.get('RAPID_API_KEY')
-print(RAPID_API_KEY)
+if not RAPID_API_KEY:
+    logger.error("RAPID_API_KEY not found in environment variables")
+    raise ValueError("Missing RAPID_API_KEY in environment")
+
+logger.info(f"RAPID_API_KEY loaded: {RAPID_API_KEY[:5]}...")  # Log 5 ký tự đầu để kiểm tra
 # API key cố định
 ALLOWED_API_KEY = 'yt2024_k8hj3n5m9p2q4w7r'
 

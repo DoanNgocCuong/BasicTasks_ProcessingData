@@ -40,6 +40,11 @@ RAPID_API_KEY=090971f6bbmshb3be82863a6621dp1721d4jsn22096fb306a6
 functions-framework --target=get_youtube_transcript --port=8080
 ```
 
+Hoặc chạy trực tiếp bằng Module:
+```bash
+python -m functions_framework --target=get_youtube_transcript --port=8080
+```
+
 ## 3. Cấu Trúc Code
 
 ### 3.1 Entry Point
