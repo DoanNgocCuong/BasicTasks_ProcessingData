@@ -1,4 +1,8 @@
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class TikTokDownloader:
     def __init__(self, author_uniqueid, video_id, tiktok_api_key):
@@ -17,8 +21,15 @@ class TikTokDownloader:
         }
         params = {"url": tiktok_url}
         
+        # Thêm debug info
+        print(f"URL being called: {self.tiktok_api_url}")
+        print(f"Headers: {headers}")
+        print(f"Params: {params}")
+        
         try:
             response = requests.get(self.tiktok_api_url, headers=headers, params=params)
+            print(f"Response status: {response.status_code}")
+            print(f"Response body: {response.text}")  # Xem nội dung lỗi chi tiết
             response.raise_for_status()
             data = response.json()
             return data.get("play")
@@ -46,9 +57,9 @@ class TikTokDownloader:
             print(f"Error downloading video: {e}")
 
 # Example usage
-author_uniqueid = "user123"
-video_id = "456789"
-tiktok_api_key = "YOUR_TIKTOK_API_KEY"  # Replace with your TikTok API key
-
+author_uniqueid = "moxierobot"  # Username từ link
+video_id = "7255473484782996778"  # ID video từ link
+tiktok_api_key = os.getenv("TIKTOK_API_KEY")
+print(tiktok_api_key[:5])
 downloader = TikTokDownloader(author_uniqueid, video_id, tiktok_api_key)
 downloader.download_video("video.mp4")  # Save the video as "video.mp4"
