@@ -1,8 +1,16 @@
+from pathlib import Path
 import requests
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Add folder configuration
+SCRIPTS_FOLDER = Path(__file__).parent
+VIDEO_DOWNLOAD_FOLDER = SCRIPTS_FOLDER / 'video_downloaded'
+
+# Create download folder if it doesn't exist
+VIDEO_DOWNLOAD_FOLDER.mkdir(exist_ok=True)
 
 class TikTokDownloader:
     def __init__(self, author_uniqueid, video_id, tiktok_api_key):
@@ -37,8 +45,11 @@ class TikTokDownloader:
             print(f"Error fetching download link: {e}")
             return None
 
-    def download_video(self, save_path):
+    def download_video(self, filename):
         """Download the video and save it locally."""
+        # Create full save path using the download folder
+        save_path = VIDEO_DOWNLOAD_FOLDER / filename
+        
         download_link = self.get_download_link()
         if not download_link:
             print("Failed to retrieve download link.")
