@@ -3,13 +3,19 @@ from def_Tiktok2VideoDownload import TikTokDownloader
 import os  
 from dotenv import load_dotenv
 import time
+from pathlib import Path
 
 load_dotenv()
+
+def extract_video_id(video_id: str) -> str:
+    """Extract numeric ID from string with 'id' prefix"""
+    return video_id.replace('id', '') if video_id.startswith('id') else video_id
+
 def download_all_videos_from_sheet(sheet_path: str):
     """Download all videos from a sheet"""
     try:
-        # Read the Excel file
-        df = pd.read_excel(sheet_path)
+        # Read the Excel file with Video ID as string
+        df = pd.read_excel(sheet_path, dtype={'Video ID': str})
         print(f"\nReading Excel file: {sheet_path}")
         print("Available columns:", df.columns.tolist())
 
@@ -19,21 +25,37 @@ def download_all_videos_from_sheet(sheet_path: str):
         if missing_columns:
             raise ValueError(f"Missing required columns: {missing_columns}")
 
+        # Create video_downloaded folder if not exists
+        video_folder = Path(__file__).parent / "video_downloaded"
+        video_folder.mkdir(exist_ok=True)
+
         total_videos = len(df)
         success_count = 0
         failed_videos = []
 
         for index, row in df.iterrows():
             try:
-                video_id = str(row['Video ID'])
+                # Extract numeric ID from Video ID column
+                raw_video_id = str(row['Video ID'])  # e.g. "id7395372017270263071"
+                video_id = extract_video_id(raw_video_id)  # e.g. "7395372017270263071"
                 video_url = row['Video URL']
                 
                 print(f"\nProcessing video {index + 1}/{total_videos}")
-                print(f"Video ID: {video_id}")
+                print(f"Raw Video ID: {raw_video_id}")
+                print(f"Extracted Video ID: {video_id}")
                 print(f"URL: {video_url}")
                 
                 # Extract username from the URL
                 username = video_url.split('@')[1].split('/')[0]
+                
+                # Check if video already exists
+                filename = f"{username}_{video_id}.mp4"  # e.g. "moxierobot_7395372017270263071.mp4"
+                video_path = video_folder / filename
+                
+                if video_path.exists():
+                    print(f"Video already exists: {filename}")
+                    success_count += 1
+                    continue
                 
                 # Create a downloader instance
                 tiktok_api_key = os.getenv("TIKTOK_API_KEY")
@@ -43,7 +65,6 @@ def download_all_videos_from_sheet(sheet_path: str):
                 max_retries = 3
                 for attempt in range(max_retries):
                     try:
-                        filename = f"{username}_{video_id}.mp4"
                         if downloader.download_video(filename):
                             success_count += 1
                             print(f"Successfully downloaded: {filename}")

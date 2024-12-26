@@ -12,8 +12,10 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
         # Create DataFrame from video list and ensure Video ID is a string
         df = pd.DataFrame(videos)
         
-        # Ensure Video ID is a string
-        df['id'] = df['id'].astype(str)
+        # # Ensure Video ID is a string
+        # df['id'] = df['id'].astype(str)
+        # Add 'id' prefix to Video ID to prevent scientific notation
+        df['id'] = 'id' + df['id'].astype(str)
         
         # Convert timestamp to datetime
         if 'create_time' in df.columns:
