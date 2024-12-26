@@ -74,3 +74,4 @@ tiktok_api_key = os.getenv("TIKTOK_API_KEY")
 print(tiktok_api_key[:5])
 downloader = TikTokDownloader(author_uniqueid, video_id, tiktok_api_key)
 downloader.download_video("video.mp4")  # Save the video as "video.mp4"
+
