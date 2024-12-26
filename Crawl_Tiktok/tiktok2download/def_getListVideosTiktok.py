@@ -66,7 +66,7 @@ def fetch_tiktok_videos(username, api_key, max_videos=5):
 if __name__ == "__main__":
     username = "moxierobot"
     api_key = os.getenv("TIKTOK_API_KEY")
-    max_videos = 1
+    max_videos = 20
 
     if not api_key:
         print("Error: TIKTOK_API_KEY environment variable not set")

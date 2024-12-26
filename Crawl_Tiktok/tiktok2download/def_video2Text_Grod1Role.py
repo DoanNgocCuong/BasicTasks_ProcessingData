@@ -18,7 +18,7 @@ def transcribe_video(video_path):
         video_path = Path(video_path)
         
         # Initialize Groq client
-        groq_key = ''
+        groq_key = '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'
         client = Groq(api_key=groq_key)
 
         # Check if file exists

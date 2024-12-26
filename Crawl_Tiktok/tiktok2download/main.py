@@ -1,65 +1,97 @@
-import os
 from pathlib import Path
 from dotenv import load_dotenv
-from tiktok2download.def_getListVideosTiktok import fetch_tiktok_videos
+import os
+import shutil
+from datetime import datetime
+from def_getListVideosTiktok import fetch_tiktok_videos
 from utils_saveListVideosToExcel import save_videos_to_excel
-from tiktok2download.def_Tiktok2VideoDownload import TikTokDownloader
+from utils_sheet2DowloadAllVideo import download_all_videos_from_sheet
+from utils_AllVideoToTranscription1RoleGrod import process_all_videos
 
 def setup_environment():
     """Setup environment variables and directories"""
-    env_path = Path(__file__).parent / '.env'
+    current_dir = Path(__file__).parent
+    
+    # Setup directories
+    excel_output_dir = current_dir / "excel_output"
+    video_dir = current_dir / "video_downloaded"
+    backup_dir = current_dir / "backups"
+    
+    # Create directories if not exist
+    for dir_path in [excel_output_dir, video_dir, backup_dir]:
+        dir_path.mkdir(exist_ok=True)
+    
+    # Load environment variables
+    env_path = current_dir.parent / '.env'
     load_dotenv(dotenv_path=env_path)
     
     api_key = os.getenv("TIKTOK_API_KEY")
     if not api_key:
         raise ValueError("Error: TIKTOK_API_KEY environment variable not set")
     
-    return api_key
+    return api_key, excel_output_dir, video_dir, backup_dir
 
-def process_videos(username: str, max_videos: int = 30):
-    """Main process to fetch, save and download videos"""
+def backup_excel_file(excel_path: Path, backup_dir: Path):
+    """Create backup of existing Excel file"""
+    if excel_path.exists():
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_path = backup_dir / f"MoxieRobot_Videos_backup_{timestamp}.xlsx"
+        shutil.copy2(excel_path, backup_path)
+        print(f"\nCreated backup: {backup_path}")
+
+def main():
+    """Main process to fetch videos, save to Excel, download videos and transcribe"""
     try:
-        # Setup
-        api_key = setup_environment()
-        output_dir = Path(__file__).parent / "output"
+        # Configuration
+        USERNAME = "moxierobot"
+        MAX_VIDEOS = 30
         
-        print(f"\nProcessing TikTok videos for user: {username}")
-        print(f"Maximum videos to process: {max_videos}")
+        # Setup
+        api_key, excel_output_dir, video_dir, backup_dir = setup_environment()
+        excel_file = "MoxieRobot_Videos.xlsx"
+        excel_path = excel_output_dir / excel_file
+        
+        # Create backup of existing Excel file
+        backup_excel_file(excel_path, backup_dir)
+        
+        print(f"\nStarting process for user: {USERNAME}")
+        print(f"Maximum videos to process: {MAX_VIDEOS}")
         
         # Step 1: Fetch videos list
-        videos = fetch_tiktok_videos(username, api_key, max_videos)
+        print("\nFetching videos list...")
+        videos = fetch_tiktok_videos(USERNAME, api_key, MAX_VIDEOS)
         if not videos:
             print("No videos found")
             return
         
         # Step 2: Save to Excel
-        excel_path = save_videos_to_excel(
+        print("\nSaving to Excel...")
+        excel_saved_path = save_videos_to_excel(
             videos, 
-            output_dir=str(output_dir),
-            filename=f"{username}_videos.xlsx"
+            output_dir=str(excel_output_dir),
+            filename=excel_file
         )
         
-        if not excel_path:
+        if not excel_saved_path:
             print("Failed to save Excel file")
             return
             
-        # Step 3: Download videos
-        downloader = TikTokDownloader(api_key)
-        for video in videos:
-            video_id = video['id']
-            filename = f"{username}_{video_id}.mp4"
-            print(f"\nDownloading video {video_id}...")
-            downloader.download_video(username, video_id, filename)
+        # Step 3: Download videos from Excel
+        print("\nDownloading videos from Excel...")
+        download_all_videos_from_sheet(excel_path)
             
+        # Step 4: Process transcriptions
+        print("\nProcessing video transcriptions...")
+        process_all_videos()
+        
         print("\nProcess completed successfully!")
+        print(f"Excel file: {excel_path}")
+        print(f"Videos directory: {video_dir}")
+        print(f"Backups directory: {backup_dir}")
         
     except Exception as e:
         print(f"\nError in main process: {str(e)}")
         raise
 
 if __name__ == "__main__":
-    # Configuration
-    USERNAME = "moxierobot"  # Change this to target username
-    MAX_VIDEOS = 30          # Maximum number of videos to process
-    
-    process_videos(USERNAME, MAX_VIDEOS)
+    main()
