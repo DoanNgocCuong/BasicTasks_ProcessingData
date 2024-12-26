@@ -106,7 +106,7 @@ if __name__ == "__main__":
     
     if videos:
         # Lưu vào Excel
-        output_dir = "output"
+        output_dir = "excel_output"
         save_videos_to_excel(videos, output_dir=output_dir)
     else:
         print("No videos to save")
