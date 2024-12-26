@@ -47,25 +47,46 @@ class TikTokDownloader:
 
     def download_video(self, filename):
         """Download the video and save it locally."""
-        # Create full save path using the download folder
         save_path = VIDEO_DOWNLOAD_FOLDER / filename
+        
+        # Skip if file already exists
+        if save_path.exists():
+            print(f"File already exists: {save_path}")
+            return True
         
         download_link = self.get_download_link()
         if not download_link:
             print("Failed to retrieve download link.")
-            return
+            return False
         
         try:
             print(f"Downloading video from: {download_link}")
             response = requests.get(download_link, stream=True)
             response.raise_for_status()
+            
+            # Get file size for progress tracking
+            file_size = int(response.headers.get('content-length', 0))
+            
             with open(save_path, "wb") as video_file:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if chunk:
-                        video_file.write(chunk)
+                if file_size == 0:
+                    video_file.write(response.content)
+                else:
+                    downloaded = 0
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            video_file.write(chunk)
+                            downloaded += len(chunk)
+                            # Print progress
+                            progress = int(50 * downloaded / file_size)
+                            print(f"\rDownloading: [{'=' * progress}{' ' * (50-progress)}] {downloaded}/{file_size} bytes", end='')
+                    print()  # New line after progress bar
+            
             print(f"Video saved to {save_path}")
+            return True
+            
         except requests.exceptions.RequestException as e:
             print(f"Error downloading video: {e}")
+            return False
 
 # Example usage
 author_uniqueid = "moxierobot"  # Username từ link
@@ -73,5 +94,5 @@ video_id = "7255473484782996778"  # ID video từ link
 tiktok_api_key = os.getenv("TIKTOK_API_KEY")
 print(tiktok_api_key[:5])
 downloader = TikTokDownloader(author_uniqueid, video_id, tiktok_api_key)
-downloader.download_video("video.mp4")  # Save the video as "video.mp4"
+downloader.download_video("video_test.mp4")  # Save the video as "video.mp4"
 
