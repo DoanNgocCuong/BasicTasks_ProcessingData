@@ -9,21 +9,21 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
     Save list of TikTok videos to Excel file.
     """
     try:
-        # Tạo DataFrame từ danh sách video và chỉ định Video ID là string
+        # Create DataFrame from video list and ensure Video ID is a string
         df = pd.DataFrame(videos)
         
-        # Đảm bảo Video ID là string
+        # Ensure Video ID is a string
         df['id'] = df['id'].astype(str)
         
         # Convert timestamp to datetime
         if 'create_time' in df.columns:
             df['create_time'] = pd.to_datetime(df['create_time'], unit='s')
         
-        # Sắp xếp theo thời gian tạo (mới nhất lên đầu)
+        # Sort by creation time (newest first)
         if 'create_time' in df.columns:
             df = df.sort_values('create_time', ascending=False)
         
-        # Đổi tên cột cho dễ đọc
+        # Rename columns for better readability
         column_mapping = {
             'id': 'Video ID',
             'description': 'Description',
@@ -36,11 +36,12 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
             'download_url': 'Download URL',
             'play_url': 'Play URL',
             'cover_url': 'Cover URL',
-            'url': 'Video URL'
+            'url': 'Video URL',
+            'hashtags': 'Hashtags'  # Added hashtags column
         }
         df = df.rename(columns=column_mapping)
         
-        # Sắp xếp lại thứ tự cột
+        # Reorder columns
         columns_order = [
             'Video ID',
             'Description',
@@ -50,6 +51,7 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
             'Likes',
             'Comments',
             'Shares',
+            'Hashtags',  # Added Hashtags to the order
             'Video URL',
             'Download URL',
             'Play URL',
@@ -57,22 +59,22 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
         ]
         df = df[columns_order]
         
-        # Tạo tên file với timestamp
+        # Create filename with timestamp
         if not filename:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f'MoxieRobot_Videos.xlsx'  # Changed to fixed name
         
-        # Tạo output directory nếu chưa tồn tại
+        # Create output directory if it does not exist
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
             file_path = Path(output_dir) / filename
         else:
             file_path = Path(filename)
             
-        # Lưu file Excel với dtype để giữ nguyên format của Video ID
+        # Save Excel file with dtype to keep Video ID format
         with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
             df.to_excel(writer, index=False)
-            # Đặt format cho cột Video ID là text
+            # Set format for Video ID column as text
             worksheet = writer.sheets['Sheet1']
             worksheet.column_dimensions['A'].number_format = '@'
         
@@ -86,14 +88,14 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
 
 # Example usage
 if __name__ == "__main__":
-    # Import hàm fetch_tiktok_videos từ get_list_videos.py
+    # Import function fetch_tiktok_videos from get_list_videos.py
     from def_getListVideosTiktok import fetch_tiktok_videos
     import os
     from dotenv import load_dotenv
     
     load_dotenv()
     
-    # Lấy danh sách video
+    # Get video list
     username = "moxierobot"
     api_key = os.getenv("TIKTOK_API_KEY")
     max_videos = 1
@@ -105,7 +107,7 @@ if __name__ == "__main__":
     videos = fetch_tiktok_videos(username, api_key, max_videos=max_videos)
     
     if videos:
-        # Lưu vào Excel
+        # Save to Excel
         output_dir = "excel_output"
         save_videos_to_excel(videos, output_dir=output_dir)
     else:
