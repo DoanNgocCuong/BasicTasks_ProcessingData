@@ -7,18 +7,13 @@ from typing import List, Dict
 def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: str = None) -> str:
     """
     Save list of TikTok videos to Excel file.
-    
-    Args:
-        videos: List of video dictionaries
-        output_dir: Directory to save Excel file (default: current directory)
-        filename: Name of Excel file (default: TikTok_Videos_{timestamp}.xlsx)
-    
-    Returns:
-        str: Path to saved Excel file
     """
     try:
-        # Tạo DataFrame từ danh sách video
+        # Tạo DataFrame từ danh sách video và chỉ định Video ID là string
         df = pd.DataFrame(videos)
+        
+        # Đảm bảo Video ID là string
+        df['id'] = df['id'].astype(str)
         
         # Convert timestamp to datetime
         if 'create_time' in df.columns:
@@ -65,7 +60,7 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
         # Tạo tên file với timestamp
         if not filename:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f'TikTok_Videos_{timestamp}.xlsx'
+            filename = f'MoxieRobot_Videos.xlsx'  # Changed to fixed name
         
         # Tạo output directory nếu chưa tồn tại
         if output_dir:
@@ -74,8 +69,13 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
         else:
             file_path = Path(filename)
             
-        # Lưu file Excel
-        df.to_excel(file_path, index=False, engine='openpyxl')
+        # Lưu file Excel với dtype để giữ nguyên format của Video ID
+        with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+            # Đặt format cho cột Video ID là text
+            worksheet = writer.sheets['Sheet1']
+            worksheet.column_dimensions['A'].number_format = '@'
+        
         print(f"\nSaved {len(videos)} videos to: {file_path}")
         
         return str(file_path)
@@ -87,7 +87,7 @@ def save_videos_to_excel(videos: List[Dict], output_dir: str = None, filename: s
 # Example usage
 if __name__ == "__main__":
     # Import hàm fetch_tiktok_videos từ get_list_videos.py
-    from tiktok2download.def_getListVideosTiktok import fetch_tiktok_videos
+    from def_getListVideosTiktok import fetch_tiktok_videos
     import os
     from dotenv import load_dotenv
     
@@ -96,12 +96,13 @@ if __name__ == "__main__":
     # Lấy danh sách video
     username = "moxierobot"
     api_key = os.getenv("TIKTOK_API_KEY")
+    max_videos = 1
     
     if not api_key:
         print("Error: TIKTOK_API_KEY environment variable not set")
         exit(1)
     
-    videos = fetch_tiktok_videos(username, api_key, max_videos=30)
+    videos = fetch_tiktok_videos(username, api_key, max_videos=max_videos)
     
     if videos:
         # Lưu vào Excel
