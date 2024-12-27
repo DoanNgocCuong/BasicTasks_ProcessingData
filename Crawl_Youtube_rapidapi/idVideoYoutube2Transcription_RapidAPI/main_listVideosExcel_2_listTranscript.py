@@ -60,6 +60,7 @@ def main():
     parser = argparse.ArgumentParser(description='Lấy transcript cho danh sách video từ file Excel')
     parser.add_argument('--input', required=True, help='Đường dẫn đến file Excel chứa danh sách video')
     parser.add_argument('--max-workers', type=int, default=5, help='Số luồng xử lý tối đa')
+    parser.add_argument('--limit', type=int, help='Số lượng video muốn lấy (mặc định: tất cả)')
     args = parser.parse_args()
 
     # Khởi tạo các đối tượng
@@ -72,6 +73,11 @@ def main():
     if not videos:
         logger.error("Không thể đọc danh sách video từ file Excel")
         sys.exit(1)
+
+    # Giới hạn số lượng video nếu có tham số limit
+    if args.limit and args.limit > 0:
+        videos = videos[:args.limit]
+        logger.info(f"Giới hạn xử lý {args.limit} video đầu tiên")
 
     # Xử lý song song các video
     results = []
