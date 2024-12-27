@@ -6,6 +6,7 @@ import json
 import os
 from def_xtracrt_chanelID_fromUsername import YouTubeChannelExtractor
 from def_chanelID_get_videos import YouTubeVideoFetcher
+from utils_savelistVideos2Excel import ExcelExporter
 
 # Tải biến môi trường từ file .env
 load_dotenv()
@@ -56,6 +57,19 @@ def main():
         'channel_id': channel_id,
         'video_count': len(videos)
     }, indent=4, ensure_ascii=False))
+
+    # Sau khi lấy được danh sách video
+    if videos:
+        # Khởi tạo ExcelExporter
+        excel_exporter = ExcelExporter()
+        
+        # Lưu danh sách video vào file Excel
+        excel_file = excel_exporter.save_videos_to_excel(videos, channel_id)
+        
+        if excel_file:
+            logger.info(f"Đã lưu danh sách video vào file: {excel_file}")
+        else:
+            logger.error("Không thể lưu danh sách video vào file Excel")
 
 if __name__ == "__main__":
     main()

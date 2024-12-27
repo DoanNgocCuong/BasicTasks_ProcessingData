@@ -1,129 +1,98 @@
-# How to Run YouTube Channel Videos API
+Tôi sẽ hướng dẫn bạn cách chạy chương trình này:
 
-## Prerequisites
-1. Python 3.7 or higher
-2. RapidAPI Key
-3. Google Cloud Functions environment (for deployment)
+### 1. Cài đặt các thư viện cần thiết
 
-## Local Setup
-
-### 0. Create and Activate a Virtual Environment
+Đầu tiên, cài đặt tất cả các thư viện được liệt kê trong `requirements.txt`:
 
 ```bash
-# Create a virtual environment
-python -m venv venv
-
-# Activate the virtual environment
-
-# Windows
-.\venv\Scripts\activate
-
-# Linux/Mac
-source venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### 1. Install Required Packages
-```bash
-pip install functions-framework
-pip install flask
-pip install requests
+### 2. Tạo file .env
+
+Tạo một file `.env` trong thư mục gốc của project và thêm API key của RapidAPI:
+
+```plaintext
+RAPID_API_KEY=your_rapidapi_key_here
 ```
 
-### 2. Set Environment Variable
-```bash
-# Windows
-set RAPID_API_KEY=your_api_key_here
+Thay `your_rapidapi_key_here` bằng API key thật của bạn từ RapidAPI.
 
-# Linux/Mac
-export RAPID_API_KEY=your_api_key_here
-```
+### 3. Chạy chương trình
 
-### 3. Run Locally
-```bash
-python -m functions_framework --target get_youtube_channel_videos --port 8080
-```
-
-## Testing
-
-### 1. Using cURL
+Có thể chạy chương trình với các định dạng URL khác nhau:
 
 ```bash
-# Test with MrBeast's channel
-curl -X GET "http://localhost:8080?url=https://www.youtube.com/@MrBeast"
+# Sử dụng handle (@username)
+python main_userNameChanelYoutube_getVideos.py --url "https://www.youtube.com/@mkbhd"
 
-# Test with PewDiePie's channel
-curl -X GET "http://localhost:8080?url=https://www.youtube.com/user/PewDiePie"
+# Hoặc sử dụng channel ID
+python main_userNameChanelYoutube_getVideos.py --url "https://www.youtube.com/channel/UCBJycsmduvYEL83R_U4JriQ"
 
-# Test with standard channel ID
-curl -X GET "http://localhost:8080?url=https://www.youtube.com/channel/UC-lHJZR3Gqxm24_Vd_AJ5Yw"
+# Hoặc sử dụng custom URL
+python main_userNameChanelYoutube_getVideos.py --url "https://www.youtube.com/c/mkbhd"
 ```
 
-### 2. Using Browser
-Open your browser and visit:
+### 4. Kết quả
+
+Sau khi chạy thành công:
+
+1. Chương trình sẽ in ra JSON chứa thông tin về các video đã tìm thấy
+2. Tự động tạo một thư mục `output` (nếu chưa tồn tại)
+3. Tạo file Excel trong thư mục `output` với tên format: `videos_[channel_id]_[timestamp].xlsx`
+
+### 5. Cấu trúc thư mục
+
 ```
-http://localhost:8080?url=https://www.youtube.com/@MrBeast
+Crawl_Youtube_rapidapi/
+├── api-chanelYoutube-get-video/
+│   ├── main_userNameChanelYoutube_getVideos.py
+│   ├── def_chanelID_get_videos.py
+│   ├── def_xtracrt_chanelID_fromUsername.py
+│   ├── utils_savelistVideos2Excel.py
+│   ├── requirements.txt
+│   ├── .env
+│   └── output/
+│       └── videos_[channel_id]_[timestamp].xlsx
 ```
 
-## Expected Output
-```
-https://www.youtube.com/watch?v=video1
-https://www.youtube.com/watch?v=video2
-https://www.youtube.com/watch?v=video3
-...
-```
+### 6. Ví dụ cụ thể
 
-## Error Codes
-- 200: Success
-- 400: Invalid input (missing or invalid URL)
-- 404: No videos found
-- 500: Server error
-
-## Deployment to Google Cloud Functions
-
-1. Create `requirements.txt`:
-```
-functions-framework==3.*
-flask==2.*
-requests==2.*
-```
-
-2. Deploy using gcloud:
 ```bash
-gcloud functions deploy get_youtube_channel_videos \
-  --runtime python39 \
-  --trigger-http \
-  --allow-unauthenticated \
-  --set-env-vars RAPID_API_KEY=your_api_key_here
+# Ví dụ lấy video từ kênh Marques Brownlee
+python main_userNameChanelYoutube_getVideos.py --url "https://www.youtube.com/@mkbhd"
 ```
 
-3. Test deployed function:
-```bash
-curl -X GET "https://your-function-url?url=https://www.youtube.com/@MrBeast"
+Output sẽ hiển thị:
+```
+2024-XX-XX XX:XX:XX,XXX - INFO - Channel ID: UCBJycsmduvYEL83R_U4JriQ
+2024-XX-XX XX:XX:XX,XXX - INFO - Tìm thấy XX video
+2024-XX-XX XX:XX:XX,XXX - INFO - Đã lưu danh sách video vào file: output/videos_UCBJycsmduvYEL83R_U4JriQ_20240312_123456.xlsx
 ```
 
-## Common Issues
+### 7. Lưu ý quan trọng
 
-1. **Missing API Key**
-```
-Error: RAPID_API_KEY environment variable not set
-```
-Solution: Set the RAPID_API_KEY environment variable
+1. Đảm bảo có kết nối internet ổn định
+2. API key phải còn hiệu lực và có đủ quota
+3. URL kênh YouTube phải là kênh công khai
+4. Nếu gặp lỗi, kiểm tra log để biết chi tiết
 
-2. **Invalid Channel URL**
-```
-Error: Invalid channel URL or could not extract channel ID
-```
-Solution: Check if the URL is correct and accessible
+### 8. Xử lý lỗi thường gặp
 
-3. **No Videos Found**
-```
-Error: No videos found in channel
-```
-Solution: Verify the channel exists and has public videos
+1. **Lỗi "Invalid API key"**:
+   - Kiểm tra lại API key trong file `.env`
+   - Đảm bảo đã đăng ký dịch vụ trên RapidAPI
 
-## Rate Limits
-- Check your RapidAPI subscription for specific limits
-- Default tier typically allows 100 requests per day
+2. **Lỗi "Channel not found"**:
+   - Kiểm tra URL kênh có chính xác không
+   - Đảm bảo kênh không bị ẩn/xóa
 
-## Support
-For issues or questions, please create an issue in the repository.
+3. **Lỗi "No videos found"**:
+   - Kiểm tra kênh có video công khai không
+   - Thử với kênh YouTube khác
+
+4. **Lỗi thư viện**:
+   - Chạy lại lệnh cài đặt thư viện
+   ```bash
+   pip install -r requirements.txt
+   ```
