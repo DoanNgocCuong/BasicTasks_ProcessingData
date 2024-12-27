@@ -6,7 +6,19 @@ import os
 
 @functions_framework.http
 def get_youtube_playlist_videos(request: Request):
-    """HTTP Cloud Function."""
+    """Hàm này xử lý yêu cầu HTTP để lấy danh sách video từ một playlist YouTube.
+    
+    Tham số:
+    request: Đối tượng yêu cầu HTTP chứa thông tin về yêu cầu từ client.
+
+    Trả về:
+    - Nếu thành công, trả về danh sách URL video trong playlist.
+    - Nếu có lỗi, trả về mã lỗi và thông báo lỗi.
+    
+    Hàm này gọi 2 hàm phụ trợ bên trong:
+    - extract_playlist_id: Trích xuất ID của playlist từ URL
+    - get_playlist_videos: Lấy danh sách video từ API
+    """
     headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -49,7 +61,15 @@ def get_youtube_playlist_videos(request: Request):
         return (f'Error processing request: {str(e)}', 500, headers)
 
 def extract_playlist_id(url):
-    """Extract playlist ID from various YouTube URL formats."""
+    """Hàm này trích xuất ID của playlist từ các định dạng URL YouTube khác nhau.
+    
+    Tham số:
+    url: Chuỗi URL của playlist YouTube.
+
+    Trả về:
+    - ID của playlist nếu tìm thấy.
+    - None nếu không tìm thấy hoặc URL không hợp lệ.
+    """
     try:
         # Xử lý input trống hoặc không hợp lệ
         if not url or not isinstance(url, str):
@@ -142,7 +162,15 @@ def extract_playlist_id(url):
         return None
 
 def get_playlist_videos(playlist_id):
-    """Fetch playlist videos from YouTube API."""
+    """Hàm này lấy danh sách video từ một playlist YouTube thông qua API.
+    
+    Tham số:
+    playlist_id: ID của playlist YouTube.
+
+    Trả về:
+    - Danh sách URL video trong playlist.
+    - Danh sách rỗng nếu không có video nào được tìm thấy.
+    """
     url = "https://youtube-media-downloader.p.rapidapi.com/v2/playlist/details"
     
     api_key = os.getenv(RAPID_API_KEY)
