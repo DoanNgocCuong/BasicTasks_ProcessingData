@@ -89,10 +89,8 @@ class YouTubeTranscriptFetcher:
                 logger.error("Không tìm thấy nội dung transcript")
                 return None
 
-            # Nối các dòng transcript và cắt nếu quá dài
+            # Nối các dòng transcript và lưu full không cắt
             transcript_text = '\n'.join(transcript_lines)
-            if len(transcript_text) > 95000:
-                transcript_text = transcript_text[:95000] + "\n[Transcript bị cắt do quá dài]"
 
             return {
                 'transcript': transcript_text,
@@ -129,6 +127,6 @@ if __name__ == "__main__":
     result = fetcher.get_transcript(video_id)
     if result:
         print("Success!")
-        print(f"First 200 chars of transcript: {result['transcript'][:200]}...")
+        print(f"First 200 chars of transcript: {result['transcript']}")
     else:
         print("Failed to get transcript")

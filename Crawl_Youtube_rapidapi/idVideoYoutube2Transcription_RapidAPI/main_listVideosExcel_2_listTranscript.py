@@ -2,6 +2,8 @@ import logging
 import argparse
 import time
 import sys
+import os
+import pandas as pd
 from typing import List, Dict
 from utils_readExcel import ExcelReader
 from utils_saveExcel import TranscriptExcelSaver
@@ -21,7 +23,19 @@ def process_video(video: Dict, transcript_fetcher: YouTubeTranscriptFetcher,
         video_id = video['videoId']
         logger.info(f"=== Bắt đầu xử lý video: {video['title']} ({video_id}) ===")
 
-        # Lấy transcript
+        # Kiểm tra xem video đã có transcript chưa
+        df = pd.read_excel(input_file)  # Đọc trực tiếp từ input file
+        if 'transcript' in df.columns:
+            mask = df['ID video'] == video_id
+            if mask.any() and pd.notna(df.loc[mask, 'transcript']).any():
+                logger.info(f"Video {video_id} đã có transcript, bỏ qua")
+                return {
+                    'video_id': video_id,
+                    'status': 'skipped',
+                    'message': 'Đã có transcript'
+                }
+
+        # Nếu chưa có transcript, tiến hành lấy từ API
         logger.info(f"Đang lấy transcript cho video {video_id}...")
         transcript_data = transcript_fetcher.get_transcript(video_id)
         if not transcript_data:
@@ -97,7 +111,10 @@ def main():
 
     # In tổng kết
     success_count = sum(1 for r in results if r['status'] == 'success')
-    logger.info(f"Đã xử lý xong {len(results)} video, thành công: {success_count}")
+    skipped_count = sum(1 for r in results if r['status'] == 'skipped')
+    logger.info(f"Đã xử lý xong {len(results)} video:")
+    logger.info(f"- Thành công: {success_count}")
+    logger.info(f"- Đã có sẵn: {skipped_count}")
     
     # In chi tiết các video lỗi
     failed_videos = [r for r in results if r['status'] == 'error']
