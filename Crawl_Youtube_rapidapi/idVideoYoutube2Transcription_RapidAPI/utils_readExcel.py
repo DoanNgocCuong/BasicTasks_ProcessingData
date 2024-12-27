@@ -8,39 +8,31 @@ class ExcelReader:
     """Class để đọc dữ liệu từ file Excel."""
 
     @staticmethod
-    def read_videos_from_excel(filepath: str) -> List[Dict]:
+    def read_videos_from_excel(file_path: str) -> List[Dict]:
         """
         Đọc danh sách video từ file Excel.
         
         Args:
-            filepath (str): Đường dẫn đến file Excel
+            file_path (str): Đường dẫn đến file Excel
             
         Returns:
-            List[Dict]: Danh sách các video với thông tin url và title
+            List[Dict]: Danh sách các video, mỗi video là một dict với các thông tin
         """
         try:
-            # Đọc file Excel
-            df = pd.read_excel(filepath)
+            df = pd.read_excel(file_path)
+            logger.info(f"Đọc được {len(df)} dòng từ file Excel")
             
-            # Kiểm tra các cột cần thiết
-            required_columns = ['Đường dẫn video', 'Tiêu đề', 'ID video']
-            if not all(col in df.columns for col in required_columns):
-                logger.error("File Excel không có đủ các cột cần thiết")
-                return []
-            
-            # Chuyển DataFrame thành list of dictionaries
             videos = []
             for _, row in df.iterrows():
                 video = {
-                    'url': row['Đường dẫn video'],
+                    'videoId': row['ID video'],
                     'title': row['Tiêu đề'],
-                    'videoId': row['ID video']
+                    'url': row['Đường dẫn video']
                 }
                 videos.append(video)
             
-            logger.info(f"Đã đọc thành công {len(videos)} video từ file Excel")
             return videos
-            
+
         except Exception as e:
             logger.exception(f"Lỗi khi đọc file Excel: {str(e)}")
             return []

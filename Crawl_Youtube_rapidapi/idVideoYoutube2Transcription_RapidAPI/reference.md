@@ -1,3 +1,5 @@
+Cách chị Mai Anh đang lấy từ ID video để lấy transcript: như nào 
+
 Trong file `main.py` này, họ đang sử dụng RapidAPI để lấy thông tin playlist, không phải để lấy transcription. 
 
 Đoạn code lấy playlist:
