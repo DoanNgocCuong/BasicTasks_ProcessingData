@@ -57,6 +57,9 @@ def process_excel_file(input_file: str, output_file: str, sheet_name: str, start
 
         # Read input Excel file
         df_input = pd.read_excel(INPUT_FILE, sheet_name=sheet_name)
+        
+        if df_input.empty:
+            raise ValueError("Input file is empty")
 
         # Verify required column exists
         if 'CRUL' not in df_input.columns:
@@ -128,6 +131,28 @@ async def process_file(request: CRULRequest, background_tasks: BackgroundTasks):
     Start processing an Excel file containing CRUL commands
     """
     try:
+        # Verify file exists and is readable
+        input_path = Path(__file__).parent / request.input_file
+        if not input_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Input file '{request.input_file}' not found in {input_path}"
+            )
+        if not input_path.is_file():
+            raise HTTPException(
+                status_code=400,
+                detail=f"'{request.input_file}' is not a file"
+            )
+            
+        # Verify file can be opened as Excel
+        try:
+            pd.read_excel(input_path, sheet_name=request.sheet_name)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Error reading Excel file: {str(e)}"
+            )
+
         background_tasks.add_task(
             process_excel_file,
             request.input_file,
@@ -143,6 +168,8 @@ async def process_file(request: CRULRequest, background_tasks: BackgroundTasks):
             },
             status_code=202
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -51,10 +51,12 @@ def execute_curl(curl_command):
                     headers[key.strip()] = value.strip()
                 continue
             
-            # Parse data
-            data_match = re.search(r"--data\s+'(.*?)'|--data\s+\"(.*?)\"|--data-raw\s+'(.*?)'|--data-raw\s+\"(.*?)\"", part)
+            # Parse data - keep the data exactly as is without processing
+            data_match = re.search(r"--data\s+'(.*)'|--data\s+\"(.*)\"", part)
             if data_match:
-                data = data_match.group(1) or data_match.group(2) or data_match.group(3) or data_match.group(4)
+                data = data_match.group(1) or data_match.group(2)
+                # Remove any escaped quotes that might be present
+                data = data.replace('\\"', '"').replace("\\'", "'")
                 method = 'POST'
                 continue
         
@@ -80,6 +82,12 @@ def parse_output(output_text):
 
 def process_row(crul_command):
     """Process a single row of data"""
+    # Check if CURL command is valid
+    if pd.isna(crul_command) or not isinstance(crul_command, str):
+        print(f"\n=== Invalid CURL Command ===")
+        print(f"Found invalid value: {crul_command}")
+        return None, None
+        
     print(f"\n=== Processing Input ===")
     print(f"CRUL: {crul_command[:100]}...")
     
@@ -132,15 +140,14 @@ def main():
 
     # Convert 1-based to 0-based indexing and validate row ranges
     start_idx = args.start_row - 1
-    end_idx = args.end_row - 1 if args.end_row is not None else len(df_input) - 1
+    # If end_row is None or greater than available rows, use the last row
+    end_idx = min(args.end_row - 1 if args.end_row is not None else len(df_input) - 1, 
+                  len(df_input) - 1)
     
     if start_idx < 0 or start_idx >= len(df_input):
         logger.error(f"Start row {args.start_row} is out of range. Valid range: 1 to {len(df_input)}")
         return
-    if end_idx < start_idx or end_idx >= len(df_input):
-        logger.error(f"End row {args.end_row} is out of range. Valid range: {args.start_row} to {len(df_input)}")
-        return
-
+    
     # Create output DataFrame by copying input
     df_output = df_input.copy()
 
@@ -154,6 +161,11 @@ def main():
         
         # Process the row
         output, parsed_output = process_row(CRUL_command)
+        
+        # Skip if invalid CURL command
+        if output is None:
+            print(f"\nSkipping row {index + 1} due to invalid CURL command")
+            continue
         
         if is_json(output):
             # If output is JSON, parse it and add columns
