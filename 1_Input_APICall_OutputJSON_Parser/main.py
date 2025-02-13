@@ -104,6 +104,10 @@ def parse_arguments():
                       help='Output Excel file path (default: output_data.xlsx)')
     parser.add_argument('--sheet', type=str, default='Trang tính1',
                       help='Excel sheet name to process (default: Trang tính1)')
+    parser.add_argument('--start-row', type=int, default=1,
+                      help='Start row number (1-based indexing, default: 1)')
+    parser.add_argument('--end-row', type=int, default=None,
+                      help='End row number (1-based indexing, default: last row)')
     return parser.parse_args()
 
 def main():
@@ -126,16 +130,27 @@ def main():
         logger.error("Missing required column 'CRUL'")
         return
 
+    # Convert 1-based to 0-based indexing and validate row ranges
+    start_idx = args.start_row - 1
+    end_idx = args.end_row - 1 if args.end_row is not None else len(df_input) - 1
+    
+    if start_idx < 0 or start_idx >= len(df_input):
+        logger.error(f"Start row {args.start_row} is out of range. Valid range: 1 to {len(df_input)}")
+        return
+    if end_idx < start_idx or end_idx >= len(df_input):
+        logger.error(f"End row {args.end_row} is out of range. Valid range: {args.start_row} to {len(df_input)}")
+        return
+
     # Create output DataFrame by copying input
     df_output = df_input.copy()
 
-    # Process each row and update immediately
-    for index, row in df_input.iterrows():
+    # Process specified rows and update immediately
+    for index in range(start_idx, end_idx + 1):
         print(f"\n{'='*50}")
-        print(f"Processing row {index + 1}")
+        print(f"Processing row {index + 1} of {end_idx + 1}")
         print(f"{'='*50}")
         
-        CRUL_command = row['CRUL']
+        CRUL_command = df_input.iloc[index]['CRUL']
         
         # Process the row
         output, parsed_output = process_row(CRUL_command)
